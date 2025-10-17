@@ -1,0 +1,131 @@
+# CPS Ubuntu电脑账户密码
+双系统开机按F11选择win还是ubuntu
+密码：win：Wang20240913；ubuntu：123456
+（下载什么东西或者更改什么设置最好做个文档记录）
+
+# 机器狗操作
+通过ssh远程连接到机器狗，通过SDK控制机器狗关节运动
+详细操作参考：
+```
+https://github.com/DeepRoboticsLab/Lite3_MotionSDK?tab=readme-ov-file#1-sdk-change-log
+```
+## 1 SDK下载
+将**Lite3_MotionSDK**存储库克隆到本地主机：
+	``` cd xxxxxxxxxx    #cd <to where you want to store this project>
+ git clone --recurse-submodules https://github.com/DeepRoboticsLab/Lite3_MotionSDK.git
+	```
+## 2 识别远程主机地址、用户名和密码
+
+### 2.1 识别运动主机地址
+- 通过 WiFi 连接到机器人时，请验证您的开发主机的 IP 地址：
+- 如果网段为 1，则运动主机 IP 地址为 192.168.1.120。
+- 如果网段为 2，则运动主机 IP 地址为 192.168.2.1。
+通过以太网端口连接到机器人时，运动主机IP地址为192.168.1.120。
+
+### 2.2 识别用户名和密码
+| 用户名 | 密码 |
+| ysc    | , (单引号)|
+
+## 3 配置运动主机
+通过ssh远程连接到运动主机，为运动主机配置目标 IP 地址，以发送关节数据等运动数据。
+- 首先连接机器狗wifi或以太网端口将开发主机连接到机器狗局域网，然后使用SSH连接上一步确定的地址和用户名的运动主机：
+```
+ssh ysc@192.168.1.120
+```
+- 连接主机后，在终端中输入以下命令，打开网络配置文件：
+```
+ cd ~/jy_exe/conf
+ vim network.toml
+ ```
+ - 配置文件 network.toml 如下所示:
+ ```
+  ip = '192.168.1.102'  # Motion host will send data to this IP address
+ target_port = 43897
+ local_port = 43893
+ ```
+ *备注1：将ip地址改为自己的Ubuntu系统IP，可在设置中查看；多台电脑可考虑将ip设置为静态ip*
+ *备注2：在更改ip时，点击“i”或“a”进行修改，点击esc退出编辑模式，输入：wq保存退出*
+ 
+ - 重新启动运动程序以应用新配置：
+```
+ cd ~/jy_exe/scripts
+ sudo ./stop.sh
+ sudo ./restart.sh
+ ```
+ ## 4 配置MotionSDK
+ main.cpp代码的第 39 行为 SDK 创建了一个发送线程，用于向机器人运动主机发送关节控制命令：
+ ```
+ Sender* send_cmd = new Sender("192.168.1.120",43893); ///< Create send thread
+ ```
+ 请根据第 4 章中确定的运动主机地址修改目标 IP 地址。Sender()
+
+ ## 5 编译并运行
+ main.cpp提供了一个简单的站立演示，站立一段时间后，它将控制权直接返回给底层控制器，机器人自动进入阻尼保护模式。
+**但为了保证SDK的安全使用，在main.cpp的原始代码中，注释掉了第73行发送关节控制命令的代码，所以机器人默认只会重置为零，不会站立：**
+```
+//send_cmd->SendCmd(robot_joint_cmd);
+```
+>谨慎：在取消注释之前，开发者必须确保 SDK 与机器人之间的通信正常运行（参见“5.1 检查通信”），并确保 SDK 发送的联合控制命令正确无误，即向开发主机返回正确的关节信息
+
+### 5.1 检查通信
+MotionSDK 使用 UDP 与机器人进行通信。
+
+要检查机器人是否成功向 SDK 发送数据，开发者可以使用 SDK 打印关节数据或 imu 数据等数据，以判断 SDK 是否接收了机器人发送的数据，或者在运行 Demo 时观察是否打印。No data from the robot was received!!!!!!
+
+要检查SDK是否成功向机器人发送控制命令，开发人员可以在运行演示时观察机器人的动作。如果机器人可以归零，则证明SDK可以成功向机器人发送命令。
+- 首先编译原始代码
+>注意：您可以在编译前取消注释 main.cpp 中的第 75 行，以使 SDK 打印 imu 数据，以判断 SDK 是否接收到机器人发送的数据。cout << robot_data->imu.acc_x << endl
+- 进入解压缩的文件夹，在与CMakeLists.txt相同的目录下创建一个新的构建目录;
+```
+ cd xxxxxxxx     # cd <path to where you want to create build directory>
+ mkdir build
+ ```
+ >注意：开发人员可以在任何地方创建构建目录。但是，运行 CMake 时需要CMakeLists.txt路径。
+ - 导航到构建目录，然后编译：
+	- 为 x86 主机编译：
+	```
+	  cd build
+      cmake .. -DBUILD_PLATFORM=x86     # cmake <path to where the CMakeLists.txt is>
+      make -j
+   ```
+	>针对ARM的主机编译请参考原GitHub链接
+
+- 编译完成后，build目录下会生成一个名为**Lite_motion**的可执行文件，这是编译的结果;
+- 在终端中输入以下命令以运行Lite_motion（运行前请确保开发主机已连接到机器人网络）：
+```
+ ./Lite_motion
+ ```
+ >注意：为了使机器人顺利归零，请在运行程序之前将机器人调整到就绪位置。
+ - 观察机器人在运行Lite_motion时是否复位归零，在终端中打印机器人发送的数据是否正常(要输出机器狗关节信息)
+
+### 5.2 通信故障排除
+如果运动主机用户名为ysc，则 MotionSDK 正在开发主机上运行，并且开发主机通过 WiFi 连接到机器人，如果SDK收到的信息均为0，则在ysc@ysc:~/jy_exe/conf文件中输入：
+```
+sudo tcpdump -x port 43897 -i p2p0
+```
+>其余情况请查阅原GitHub文档
+
+### 5.3 编译与开发
+在确保 SDK 与机器人正确通信并且您的控制命令正确后，您可以在 main.cpp 中取消注释第 73 行中的代码，重新编译并再次运行它：send_cmd->SendCmd(robot_joint_cmd)
+
+- 删除之前生成的构建目录
+- 打开一个新的终端，创建一个空的构建目录;
+```
+ cd xxxxxxxx     # cd <path to where you want to create build directory>
+ mkdir build
+ ```
+- 导航到构建目录，然后编译;
+  - 为 x86 主机编译：
+	```
+	 cd build
+      cmake .. -DBUILD_PLATFORM=x86     # cmake <path to where the CMakeLists.txt is>
+      make -j 
+    ```
+-编译后，在构建目录中生成一个名为 Lite_motion 的可执行文件。在终端中输入以下代码以运行程序：
+```
+ ./Lite_motion
+ ```
+ >注意：使用绝影Lite3测试运动控制算法或进行实验时，所有在场人员应与机器人保持至少5米的距离，并将机器人悬挂在机器人吊装装置上，以免对人员和设备造成意外损坏。如果用户在实验过程中需要接近机器人，用户必须确保机器人进入紧急停止状态或使用命令关闭运动程序。sudo ./stop.sh
+
+
+
