@@ -139,7 +139,9 @@ https://blog.csdn.net/wyf2017/article/details/118676765
 - 安装虚拟环境
 ```conda create-n dr_gym python=3.8```
 - 确认环境是否已经正确安装
-```conda env list```
+```
+conda env list
+```
 ```
    #conda environnents
    
@@ -147,18 +149,33 @@ https://blog.csdn.net/wyf2017/article/details/118676765
    dr_gym  /home/ysc/anaconda3/envs/dr_gym
 ```
 -  后续所有的操作都是在**dr_gym** 环境中
-```conda activate dr_gym```
+```
+conda activate dr_gym
+```
 
 ### 1.2  Ubuntu20.04 安装 Isaac Gym 仿真器：
-- 安装**Isaac Gym**仿真器教程：```[【原创】Ubuntu20.04 安装 Isaac Gym 仿真器_isaacgym安装-CSDN博客](https://blog.csdn.net/qq_54900679/article/details/147387701)```
+- 安装**Isaac Gym**仿真器教程：
+```
+https://blog.csdn.net/qq_54900679/article/details/147387701
+```
 *根据教程，需先安装显卡驱动与CUDA，cps安装是cuda版本为12.8.1*
-- Ubuntu20.04安装**Nvidia显卡**驱动教程：```https://blog.csdn.net/ytusdc/article/details/132403852  ```
+- Ubuntu20.04安装**Nvidia显卡**驱动教程：
+```
+https://blog.csdn.net/ytusdc/article/details/132403852 
+```
 - Ubuntu 20.04 **CUDA**安装：
-```参考1 https://cloud.tencent.com/developer/article/2037551   ```
-```参考2   https://blog.csdn.net/CC977/article/details/122789394```
+```
+参考1 https://cloud.tencent.com/developer/article/2037551  
+参考2   https://blog.csdn.net/CC977/article/details/122789394
+```
 - 最后安装python包及相关依赖**运行超时**问题解决办法参考:
-```pip install -e .```
+```
+pip install -e .
+```
   
-  ```https://blog.csdn.net/qlkaicx/article/details/146703877```
+```
+https://blog.csdn.net/qlkaicx/article/details/146703877
+```
 ### 1.3 
+
 
