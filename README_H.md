@@ -130,35 +130,36 @@ sudo tcpdump -x port 43897 -i p2p0
 # 机器狗仿真
 
 ## 1 仿真环境部署
-### 1.1 在linux系统上安装anaconda3 与pytorch
-- 安装**anaconda/pytorch**（参考）：
-```
-https://blog.csdn.net/wyf2017/article/details/118676765 
-```
- <br>*注意需选择与显卡适配的**pytorch**版本,已安装的pytorch版本为2.3.1*
+### 1.1 在linux系统上安装anaconda3
+- 安装**anaconda**（参考）：
+  ```
+  https://blog.csdn.net/wyf2017/article/details/118676765 
+  ```
 - 安装虚拟环境
-```conda create-n dr_gym python=3.8```
+  ```
+  conda create-n dr_gym python=3.8
+  ```
 - 确认环境是否已经正确安装
-```
-conda env list
-```
-```
-   #conda environnents
+  ```
+  conda env list
+  ```
+  ```
+  #conda environnents
    
-   base    */home/ysc/anaconda3
-   dr_gym  /home/ysc/anaconda3/envs/dr_gym
-```
+  base    */home/ysc/anaconda3
+  dr_gym  /home/ysc/anaconda3/envs/dr_gym
+  ```
 -  后续所有的操作都是在**dr_gym** 环境中
-```
-conda activate dr_gym
-```
+  ```
+  conda activate dr_gym
+  ```
 
 ### 1.2  Ubuntu20.04 安装 Isaac Gym 仿真器：
 - 安装**Isaac Gym**仿真器教程：
 ```
 https://blog.csdn.net/qq_54900679/article/details/147387701
 ```
-*根据教程，需先安装显卡驱动与CUDA，cps安装是cuda版本为12.8.1*
+>注意: *根据教程，需先安装显卡驱动与CUDA，CUDA版本需与显卡匹配，cps安装的cuda版本为12.8.1*
 - Ubuntu20.04安装**Nvidia显卡**驱动教程：
 ```
 https://blog.csdn.net/ytusdc/article/details/132403852 
@@ -166,7 +167,7 @@ https://blog.csdn.net/ytusdc/article/details/132403852
 - Ubuntu 20.04 **CUDA**安装：
 ```
 参考1 https://cloud.tencent.com/developer/article/2037551  
-参考2   https://blog.csdn.net/CC977/article/details/122789394
+参考2 https://blog.csdn.net/CC977/article/details/122789394
 ```
 - 最后安装python包及相关依赖**运行超时**问题解决办法参考:
 ```
@@ -176,6 +177,70 @@ pip install -e .
 ```
 https://blog.csdn.net/qlkaicx/article/details/146703877
 ```
-### 1.3 
+### 1.3 安装其他依赖项
+- 安装**rs1_rl**
+  ```
+  git clone https://github.com/DeepRoboticsLab/Robot_Training_Cases/tree/main/Case2
+  ```
+- 在给出的代码中的rsl_r1目录下运行
+  ```
+    pip-e
+  ```
+- 安装其他需要安装的库
+	```
+	pip install setuptools==59.5.0
+	pip3 install torch==2.3.1+cu121 torchvision==0.18.1+cu121 torchaudio==2.3.1+cu121 --index-url https://download.pytorch.org/whl/cu121
+	```
+  >注意:*需选择与显卡适配的**pytorch**版本,已安装的**pytorch**版本为**2.3.1***
+	验证**pytorch**的安装情况
+	```
+	python3 -c "import torch; print(torch.cuda.is_available())"
+	```
+###  1.4 运行dr_gym/legged gym/scripts/train.py脚本，观察是否运行正常
+```
+conda activate isaac
+cd dr_gym/legged gym/scripts
+python3 train.py
+```
+###  1.4 运行dr_gym/legged gym/scripts/train.py脚本，观察是否运行正常
+```
+conda activate isaac
+cd dr_gym/legged gym/scripts
+python3 train.py
+```
 
 
+# 2 运行案例6：基于VMC的运动控制
+## 2.1 下载代码包
+
+    git clone https://github.com/DeepRoboticsLab/Lite3_VMC.git
+## 2.2 编译
+需在系统全局环境下进行编译与仿真。
+- 编译
+
+>若终端为（base）ubuntu20@ubuntu20:
+>则运行conda deactivate
+```
+    cd ~/Lite3_VMC
+    catkin_make
+```
+>注意：这里可能会由于缺少某些依赖项而编译失败，需安装对应的依赖项，再进行编译。再次编译时，需先将工作空间中已生成的build和include文件夹删除，再进行编译。
+>
+>若使用catkin_make进行编译出现anaconda路径污染问题，借助chatgpt对相关报错进行处理。
+
+- 配置环境变量
+```
+   source ~/Lite3_VMC/devel/setup.bash
+```
+- 运行launch文件，加载gazebo仿真环境，加载机器狗仿真模型
+```
+    roslaunch gazebo_model_spawn gazebo_startup.launch
+    roslaunch gazebo_model_spawn model_spawn.launch rname:=lite3 use_xacro
+=true use camera:=false #start controller
+```
+- 按enter键
+- 运行Lite3主控程序，键盘控制程序，通过键盘对机器狗仿真模型进行运动控制
+```
+    rosrun examples example_lite3_sim
+    rosrun examples example_keyboard
+```
