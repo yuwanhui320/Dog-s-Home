@@ -244,3 +244,10 @@ python3 train.py
     rosrun examples example_lite3_sim
     rosrun examples example_keyboard
 ```
+>"l"：切换到“力矩支撑模式”；
+>"j"：切换步态；
+>"u"：站立/坐下；
+>"i"：坐下后退出程序；
+>"w/s/a/d"：前后左右移动；
+>"q/e"：向左/右旋转；
+>"ctrl+C"：退出键盘控制程序
