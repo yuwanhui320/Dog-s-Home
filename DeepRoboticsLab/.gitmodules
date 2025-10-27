@@ -1,0 +1,3 @@
+[submodule "DeepRoboticsLab/Robot_Training_Cases"]
+	path = DeepRoboticsLab/Robot_Training_Cases
+	url = https://github.com/DeepRoboticsLab/Robot_Training_Cases
