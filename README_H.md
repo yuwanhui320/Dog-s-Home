@@ -1,19 +1,15 @@
-# CPS Ubuntu电脑账户密码
-双系统开机按F11选择win还是ubuntu
-密码：win：Wang20240913；ubuntu：123456
-（下载什么东西或者更改什么设置最好做个文档记录）
+# RIVI轨迹录制
+ubuntu20.04，通过RIVI绘制轨迹，屏幕录制出运行视频
 
 # 目录
 - [机器狗操作](#机器狗操作)
 - [机器狗仿真](#机器狗仿真)
 - [机器狗与动捕系统连接与代码运行](#机器狗与动捕系统连接与代码运行)
-# 机器狗操作
-通过ssh远程连接到机器狗，通过SDK控制机器狗关节运动
-详细操作参考：
-```
-https://github.com/DeepRoboticsLab/Lite3_MotionSDK?tab=readme-ov-file#1-sdk-change-log
-```
-## 1 SDK下载
+- [用RVIZ画机器狗的运动轨迹](#用rviz画机器狗的运动轨迹)
+## 1.电脑wifi
+选择连接机器狗wifi：YSC-JYML-td9lsi-5G
+
+## 2.操作步骤
 将**Lite3_MotionSDK**存储库克隆到本地主机：
 	``` cd xxxxxxxxxx    #cd <to where you want to store this project>
  git clone --recurse-submodules https://github.com/DeepRoboticsLab/Lite3_MotionSDK.git
@@ -275,3 +271,60 @@ python3 train.py
   ```  
 ### 4 运行控制代码
 - 在VS Code中或终端中运行均可。遇到紧急情况Ctrl+C结束运行。
+
+
+
+# 用RVIZ画机器狗的运动轨迹
+呈现出的效果是，从上往下看视角看到的机器狗实时运动的画面和实时在动捕系统上画出的轨迹图
+ 
+## 1 电脑WiFi连接
+将开启**rivz**的那台电脑
+连接上狗的WiFi **YSC—JYML—td9lsl—5G**
+  
+## 2 在Ubuntu里的操作步骤
+
+### 2.1 启动摄像头
+- 在桌面另开一个终端，输入
+```
+    roslaunch mindvision_cam ge300gc.launch
+```
+
+- 开启成功，会看见
+```
+    camera：0 open successed！！！
+```
+
+### 2.2 打开rviz
+- rviz在Ubuntu的桌面开启终端，输入
+```
+    rviz
+```
+
+- 开启成功，会看见弹出相应界面
+
+## 3 在rviz里的操作步骤
+
+### 3.1 将设定好的配置添加进rviz
+- 点击rviz界面左上角的**interact**
+- 在弹出的界面点击**Open Config**
+- 在弹出的界面左侧点击**src**
+- 选择需要的文件（狗的圆形轨迹规划的相关文件保存在了2025XuKe中），点击文件2025XuKe，可以看见文件dog_rviz.rviz，点击文件dog_rviz.rviz，就可以看见摄像头监控的机器狗实时运动的画面和实时在动捕系统上画出的轨迹图
+
+### 3.2 连接动捕系统，将数据传入rviz
+ - 接着3.1操作的界面，点击左下角的**add**，确认**Path**和**TF**被勾选（点开**Path**里面的选项都没有被勾选）
+ - 在Ubuntu的桌面开启一个新的终端，输入
+ ```
+    roslaunch vrpn_client_ros sample.launch server:=192.168.2.65
+ ```  
+
+  连接动捕系统，得到动捕系统的数据，连接成功会看见类似
+  ```
+      Found new sender:dog    
+      Creating new tracker dog
+  ```
+ - 回到rviz界面，可以看到狗的坐标（如果不需要原点坐标，可以在**interact**里面把**world**不勾选，原点坐标就会消失）
+
+ 
+## 4 屏幕录制
+- 开启Kazam屏幕录制
+- 在右上角结束录制，录制的文件在ubuntu的视频里面  
