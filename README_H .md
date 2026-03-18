@@ -8,6 +8,7 @@
 - [机器狗仿真](#机器狗仿真)
 - [机器狗与动捕系统连接与代码运行](#机器狗与动捕系统连接与代码运行)
 - [用RVIZ画机器狗的运动轨迹](#用rviz画机器狗的运动轨迹)
+- [在RVIZ里导入机器狗模型]（#在RVIZ里导入机器狗模型）
 
 # 机器狗操作
 通过ssh远程连接到机器狗，通过SDK控制机器狗关节运动
@@ -333,3 +334,209 @@ python3 train.py
 ## 4 屏幕录制
 - 开启Kazam屏幕录制
 - 在右上角结束录制，录制的文件在ubuntu的视频里面  
+
+
+# 在RVIZ里导入机器狗模型
+注意：固态硬盘里的ros版本为22.04（ros2 humble）对于18.04版本，不可以直接参考
+
+## 1 创建并初始化 ROS 2 工作空间
+
+### 1.1 创建工作空间目录
+- 命名为 ros2_ws
+  ```
+     mkdir -p ~/ros2_ws/src
+     cd ~/ros2_ws/src
+  ```
+
+### 1.2 创建工作空间目录
+- 包含 URDF 加载所需所有依赖
+  ```
+     ros2 pkg create --build-type ament_python robot_urdf \
+  --dependencies rclpy urdf robot_state_publisher joint_state_publisher_gui rviz2
+  ```
+
+### 1.3 编译工作空间
+- --symlink-install 避免重复编译
+  ```
+    cd ~/ros2_ws
+    colcon build --symlink-install
+  ```
+>注意：系统里安装的是 ROS 2 Humble，ROS 2 已经抛弃了catkin，改用 colcon 作为编译工具。
+
+
+### 1.4 激活工作空间
+- 必须执行，否则找不到自定义包
+  ```
+   source install/setup.bash
+  ```
+        
+## 2 存放 URDF 文件
+
+### 2.1 创建 URDF 文件夹并放入模型文件
+- 将下载的 Lite3 的 URDF 文件Lite3_high_res.urdf复制到该文件夹
+  ```
+   cd ~/ros2_ws/src/robot_urdf
+   mkdir urdf
+  ```
+
+### 2.2 编写 ROS 2 启动文件
+- 创建 launch 文件夹并新建文件
+  ```
+   cd ~/ros2_ws/src/robot_urdf
+   mkdir launch
+   touch launch/display_robot.launch.py
+  ```
+- 在当前终端输入以下命令，打开 Ubuntu 自带的文本编辑器（Gedit）
+  ```
+   gedit display_robot.launch.py
+  ```
+
+- 打开 display_robot.launch.py，复制以下内容
+  ```
+   from launch import LaunchDescription
+   from launch_ros.actions import Node
+   from launch.substitutions import Command, FindExecutable, PathJoinSubstitution
+   from launch_ros.substitutions import FindPackageShare
+
+   def generate_launch_description():
+    # 1. 配置 URDF 文件路径
+    urdf_file_name = "Lite3_high_res.urdf"
+    urdf_path = PathJoinSubstitution([
+        FindPackageShare("robot_urdf"),
+        "urdf",
+        urdf_file_name
+    ])
+
+    # 2. 加载 URDF 内容到参数服务器
+    robot_description = Command([FindExecutable(name="xacro"), " ", urdf_path])
+
+    # 3. 启动机器人状态发布节点（核心）
+    robot_state_publisher = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        parameters=[{"robot_description": robot_description}]
+    )
+
+    # 4. 启动关节状态发布节点（带 GUI 调节面板）
+    joint_state_publisher_gui = Node(
+        package="joint_state_publisher_gui",
+        executable="joint_state_publisher_gui",
+        name="joint_state_publisher_gui"
+    )
+
+    # 5. 启动 RViz2 可视化工具
+    rviz2 = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        output="screen"
+    )
+
+    # 组装并返回启动描述
+    return LaunchDescription([
+        robot_state_publisher,
+        joint_state_publisher_gui,
+        rviz2
+    ])
+
+  ```
+> 注意：ROS 2 的 Python 功能包（ament_python 类型）不会自动把 launch/urdf/config 等自定义文件夹复制到 install 目录，必须在 setup.py 中明确声明这些文件的安装路径，否则 ros2 launch 会找不到文件（即使文件在 src 目录下）。
+
+>解决方法：
+>#### 1 定位并编辑 setup.py 文件
+>cd ~/ros2_ws/src/robot_urdf(切换到 robot_urdf 包目录)
+>gedit setup.py(用 gedit 打开 setup.py)
+>
+>#### 2 修改 setup.py，添加文件安装规则
+>打开后你会看到默认的 setup.py 内容，需要做两处修改：
+>在 from setuptools import setup 下面添加一行：
+>import os
+>from glob import glob
+>from setuptools import setup
+>
+>修改 data_files 参数:
+>找到文件中 data_files 这一段（默认是空的 data_files=[],），替换成以下内容
+>data_files=[
+    # 1. 把 package.xml 安装到共享目录（默认已有，保留）
+    ('share/ament_index/resource_index/packages',
+        ['resource/' + 'robot_urdf']),
+    ('share/' + 'robot_urdf', ['package.xml']),
+    # 2. 新增：安装 launch 文件夹到共享目录
+    (os.path.join('share', 'robot_urdf', 'launch'), glob('launch/*.launch.py')),
+    # 3. 新增：安装 urdf 文件夹到共享目录（后续加载 URDF 也需要）
+    (os.path.join('share', 'robot_urdf', 'urdf'), glob('urdf/*.urdf')),
+],
+>
+>#### 3 重新编译并激活环境
+>修改 setup.py 后，必须重新编译才能让规则生效
+>cd ~/ros2_ws(回到工作空间根目录)
+>colcon build --symlink-install --packages-select robot_urdf(重新编译 --symlink-install 确保文件同步)
+>source install/setup.bash(重新激活环境)
+>
+>#### 4 验证并重新启动 launch 文件
+>ros2 launch robot_urdf display_robot.launch.py(再次执行 launch 命令)
+>
+>以上参考方法尝试之后还是报错，可以问ai解决方法
+
+## 3 编译并启动 URDF 加载程序
+
+### 3.1 重新编译
+- 修改 launch 文件后必做
+  ```
+   cd ~/ros2_ws
+   colcon build --symlink-install
+   source install/setup.base
+  ```
+
+### 3.2 启动 launch 文件
+- 正常现象：会弹出两个窗口 ——RViz2（空白）、关节调节面板（Joint State Publisher GUI）
+  ```
+   ros2 launch robot_urdf display_robot.launch.py
+  ```
+
+>某些工具包不属于Humble 核心安装包（默认不会自动安装），需要手动通过 apt 安装，否则运行会报错
+>
+>执行以下命令安装缺失的依赖包
+>sudo apt update
+>sudo apt install ros-humble-joint-state-publisher-gui(安装 ROS 2 Humble 版本的 joint_state_publisher_gui)
+
+## 4 配置 RViz2 显示机器人模型
+
+### 4.1 打开 RViz2 的 Displays 面板
+- RViz2 窗口左侧有一个 Displays 面板（如果没看到，点击窗口左侧的「Displays」标签，或按 Ctrl+D 调出）
+- 面板顶部会显示 Global Options（全局选项），下方是已加载的显示项（初始为空）
+
+### 4.2 添加 RobotModel 显示项
+- 在 Displays 面板底部，找到 Add 按钮，点击它
+- 弹出「Add Display」窗口，左侧列表向下滚动，找到 RobotModel
+- 选中 RobotModel 后，点击窗口右下角的 OK 按钮
+此时 Displays 面板中会新增 RobotModel 选项（默认是红色叉号，因为参数未配置）
+
+### 4.3 配置 RobotModel 核心参数
+- 点击 Description Source 右侧下拉框，选择 Topic
+- 在 Description Topic 输入框中，输入：/robot_description
+- 在左侧 Global Options → Fixed Frame 输入框中，输入你的 URDF 根连杆名称（常见值）：Torso
+
+>如果不确定需要在终端查询URDF 文件的根连杆名称
+
+### 4.4 验证是否生效
+- 配置完成后，RViz2 中 RobotModel 前面的红色叉号会变成绿色对勾，3D 视图区会显示机器人模型
+- 若仍不显示，执行以下命令检查话题是否正常。正常会输出一大段 URDF 的 XML 内容，说明话题数据正常
+  ```
+   ros2 topic echo /robot_description
+  ```
+
+### 4.5 保存配置，避免下次重复设置
+- 先创建 config 文件夹（存放配置文件）
+  ```
+   cd ~/ros2_ws/src/robot_urdf
+   mkdir -p config 
+  ```
+- 在 RViz2 窗口中，点击左上角的 File → 选择 Save Config As
+- 在弹出的文件保存窗口中，导航到 ~/ros2_ws/src/robot_urdf/config 目录
+- 文件名输入 robot_view.rviz，点击 Save 保存
+
+>模型下载链接：https://github.com/DeepRoboticsLab/deep_robotics_model
+
+  
+
