@@ -493,7 +493,8 @@ UDP->底层已启动: 监听 0.0.0.0:15001 -> /api/sport/request
   1. 在 **主机终端 B** 先按 **`x` 或空格** 让机器狗站稳，再按 `Ctrl + C` 退出键盘节点（终端打印 `已安全退出。`）。
   2. 在 **主机终端 A** 按 `Ctrl + C` 停止 `pc_ros_to_udp.py`。
   3. 在 **机载 SSH 窗口** 按 `Ctrl + C` 停止 `udp_relay.py`。
-
+## 4. 调试视频
+- <video src="https://github.com/yuwanhui320/Dog-s-Home/raw/main/go2_foxy/videos/wireless_teleop_ctrl.mp4" controls width="720"></video>
 # 常见故障排除与动捕扩展
 
 本模块汇总实验过程中出现的典型报错与解决方案，并给出后续接入动捕 ROS 话题的扩展思路。
