@@ -1107,8 +1107,7 @@ python3 ~/mocap_ws/go2_mocap_circle_pid_ctrl.py
 ```
 
 > 停机操作：在主机终端 2 按下 **`Ctrl+C`** 即可立即发送 `StopMove` 并安全退出控制节点。
-### 1.5 调试视频
-- <video src="https://github.com/yuwanhui320/Dog-s-Home/raw/main/go2_foxy/videos/nokov_track.mp4" controls width="720"></video>
+
 
 ## 2 常见故障排除
 
