@@ -317,7 +317,7 @@ Go2 高层运控（Sport Mode）存在约 $0.22\text{ m/s}$ 的起步步态死�
 
 $$\omega_{ff} = k_{ff} \cdot \frac{v_{\text{ref}}}{R}$$
 
-$$\psi_{\text{des}} = \operatorname{wrap}\left(\theta + \frac{\pi}{2} + \operatorname{atan2}(k_r \cdot e_r,\; v_{\text{ref}})\right)$$
+$$\psi_{\text{des}} = \text{wrap}\left(\theta + \frac{\pi}{2} + \text{atan2}(k_r \cdot e_r,\; v_{\text{ref}})\right)$$
 
 其中 $e_r = r_{\text{curr}} - R$ 为径向误差，$\theta$ 为当前极角。实测参数演进对照如下：
 
